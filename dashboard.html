@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모듈러 동종사 모니터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B0E14; --panel:#171E29; --panel-2:#1F2634; --line:#2E3648;
+  --line-soft:#20273400; --txt:#E9ECF1; --muted:#8B93A7; --muted-2:#5F6678;
+  --amber:#F5A623; --amber-dim:#8a5f18;
+  --cyan:#4FB0C6; --violet:#A78BFA; --green:#5FD08A; --slate:#7C8AA5;
+  --cat-sigong:var(--amber); --cat-jejak:var(--cyan); --cat-gajeon:var(--violet); --cat-seolgye:var(--green); --cat-etc:var(--slate);
+  --radius:14px; --grid:#23303f;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --disp:'Space Grotesk','Pretendard',sans-serif;
+  --body:'Pretendard',-apple-system,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--ink); color:var(--txt); font-family:var(--body);
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+/* 격자무늬는 상단에만 은은하게 남기고, 콘텐츠 영역은 깨끗한 단색으로 (가독성 우선) */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:42px 42px; opacity:.55;
+  -webkit-mask-image:radial-gradient(130% 55% at 50% -12%, #000 0%, rgba(0,0,0,.35) 38%, transparent 62%);
+  mask-image:radial-gradient(130% 55% at 50% -12%, #000 0%, rgba(0,0,0,.35) 38%, transparent 62%);
+}
+body::after{
+  content:""; position:fixed; left:50%; top:-140px; width:760px; height:340px; transform:translateX(-50%);
+  z-index:-1; pointer-events:none; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(245,166,35,.10), transparent 72%);
+}
+.wrap{max-width:1240px;margin:0 auto;padding:0 22px 90px}
+
+/* ---------- header ---------- */
+.top{padding:30px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.brandrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{width:44px;height:44px;flex:none;position:relative}
+.logo i{position:absolute;border:2px solid var(--amber);border-radius:3px}
+.logo i:nth-child(1){left:0;top:0;width:18px;height:18px;background:rgba(245,166,35,.15)}
+.logo i:nth-child(2){right:0;top:0;width:18px;height:18px}
+.logo i:nth-child(3){left:0;bottom:0;width:18px;height:18px}
+.logo i:nth-child(4){right:0;bottom:0;width:18px;height:18px;background:rgba(245,166,35,.15)}
+h1{font-family:var(--disp);font-weight:700;font-size:23px;letter-spacing:-.01em;margin:0;line-height:1.1}
+h1 small{display:block;font-family:var(--body);font-weight:500;font-size:12.5px;color:var(--muted);letter-spacing:.02em;margin-top:3px}
+.head-meta{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:11px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill b{color:var(--txt);font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(95,208,138,.15)}
+.dot.embedded{background:var(--slate);box-shadow:0 0 0 3px rgba(124,138,165,.15)}
+.btn{font-family:var(--body);font-size:12.5px;font-weight:500;background:var(--panel-2);color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:9px;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+.btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* ---------- controls ---------- */
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:11px;color:var(--txt);font-family:var(--body);font-size:14px;padding:11px 14px 11px 40px}
+.search input::placeholder{color:var(--muted-2)}
+.search input:focus{outline:none;border-color:var(--amber)}
+.search svg{position:absolute;left:13px;top:12px;width:16px;height:16px;stroke:var(--muted);fill:none}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{font-size:12.5px;padding:8px 13px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:.15s;font-family:var(--body);display:inline-flex;align-items:center;gap:7px}
+.chip:hover{color:var(--txt)}
+.chip .sw{width:8px;height:8px;border-radius:2px}
+.chip[data-on="1"]{color:var(--ink);font-weight:600}
+.chip[data-cat="시공사"][data-on="1"]{background:var(--cat-sigong);border-color:var(--cat-sigong)}
+.chip[data-cat="제작사"][data-on="1"]{background:var(--cat-jejak);border-color:var(--cat-jejak)}
+.chip[data-cat="가전사"][data-on="1"]{background:var(--cat-gajeon);border-color:var(--cat-gajeon)}
+.chip[data-cat="설계사"][data-on="1"]{background:var(--cat-seolgye);border-color:var(--cat-seolgye)}
+.chip[data-cat="전체"][data-on="1"]{background:var(--txt);border-color:var(--txt)}
+
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.tab{font-family:var(--disp);font-weight:500;font-size:14px;letter-spacing:.01em;background:none;border:none;color:var(--muted);padding:12px 18px;cursor:pointer;position:relative;transition:.15s}
+.tab:hover{color:var(--txt)}
+.tab[data-on="1"]{color:var(--txt)}
+.tab[data-on="1"]::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--amber)}
+.tab span{font-family:var(--mono);font-size:11px;color:var(--muted-2);margin-left:7px}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}
+.kpi .n{font-family:var(--disp);font-weight:700;font-size:27px;line-height:1}
+.kpi .l{font-size:12px;color:var(--muted);margin-top:6px}
+
+/* ---------- cards ---------- */
+.catgroup{margin-bottom:34px}
+.catgroup h2{font-family:var(--disp);font-weight:600;font-size:15px;letter-spacing:.02em;display:flex;align-items:center;gap:10px;margin:0 0 14px;text-transform:uppercase}
+.catgroup h2 .bar{width:22px;height:3px;border-radius:2px}
+.catgroup h2 em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted-2);font-weight:400}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;transition:.18s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-2px);border-color:var(--line)}
+.card .strip{height:4px}
+.card .body{padding:16px 17px 17px}
+.card .name{font-family:var(--disp);font-weight:600;font-size:16.5px;line-height:1.2;letter-spacing:-.01em}
+.card .status{display:inline-block;font-size:11px;font-family:var(--mono);margin-top:8px;padding:3px 8px;border-radius:6px;background:var(--panel-2);color:var(--muted)}
+.card .sectors{font-size:12.5px;color:var(--muted);margin-top:11px;line-height:1.5}
+.fin{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.fin-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted-2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.fin-head .need{color:var(--amber-dim);border:1px solid var(--amber-dim);border-radius:5px;padding:1px 6px;font-size:9.5px}
+.fintab{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+.fintab td,.fintab th{padding:3px 0;text-align:right}
+.fintab th:first-child,.fintab td:first-child{text-align:left;color:var(--muted)}
+.fintab th{color:var(--muted-2);font-weight:400;font-size:10.5px}
+.fintab .rev{color:var(--txt)}
+.fintab .op{color:var(--cyan)}
+.meta-list{margin-top:13px;display:flex;flex-direction:column;gap:7px}
+.mrow{display:flex;gap:9px;font-size:12.5px;line-height:1.45}
+.mrow .k{flex:none;width:62px;color:var(--muted-2);font-size:11px;padding-top:1px}
+.mrow .v{color:var(--txt-2,#cfd4de)}
+.tags{margin-top:12px;display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:10.5px;font-family:var(--mono);padding:3px 7px;border-radius:5px;border:1px solid var(--line);color:var(--muted)}
+.src{margin-top:12px;font-size:10.5px;color:var(--muted-2);font-family:var(--mono)}
+
+/* ---------- timeline ---------- */
+.tl{position:relative;padding-left:20px}
+.tl::before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.ev{position:relative;padding:0 0 22px 26px}
+.ev::before{content:"";position:absolute;left:-20px;top:5px;width:11px;height:11px;border-radius:3px;background:var(--panel);border:2px solid var(--amber);transform:rotate(45deg)}
+.ev.type-MOU체결::before{border-color:var(--green)}
+.ev.type-특허::before{border-color:var(--violet)}
+.ev.type-입찰·수주::before{border-color:var(--amber)}
+.ev.type-R\&D::before{border-color:var(--cyan)}
+.ev.type-제품출시::before{border-color:#EC6A9C}
+.ev.type-설비투자::before{border-color:var(--slate)}
+.ev .date{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.ev .etype{font-family:var(--mono);font-size:10px;margin-left:9px;padding:2px 7px;border-radius:5px;border:1px solid var(--line);color:var(--muted)}
+.ev .etitle{font-weight:600;font-size:15px;margin:5px 0 4px;line-height:1.35}
+.ev .esum{font-size:13px;color:var(--muted);line-height:1.55}
+.ev .ecos{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cochip{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);color:var(--txt)}
+.ev a.slink{font-size:11px;font-family:var(--mono);color:var(--muted-2);text-decoration:none;border-bottom:1px dotted var(--muted-2)}
+.ev a.slink:hover{color:var(--cyan);border-color:var(--cyan)}
+
+/* ---------- diagram ---------- */
+.diagwrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px;overflow-x:auto}
+.diag-legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 14px 4px;font-size:12px;color:var(--muted)}
+.diag-legend span{display:inline-flex;align-items:center;gap:7px}
+.diag-legend .sw{width:10px;height:10px;border-radius:3px}
+svg .node rect{transition:.15s}
+svg .node text{font-family:var(--body);font-size:12px;fill:var(--txt);pointer-events:none;font-weight:500}
+svg .node .sub{font-size:9px;fill:var(--muted-2);font-family:var(--mono)}
+svg .link{fill:none;stroke:var(--line);stroke-width:1.5;transition:.15s}
+svg.dim .node{opacity:.28}
+svg.dim .node.hot{opacity:1}
+svg.dim .link{opacity:.06}
+svg.dim .link.hot{opacity:1;stroke-width:2.2}
+.edgelabel{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+.diag-hint{padding:8px 14px 14px;font-size:11.5px;color:var(--muted-2)}
+
+/* upload hidden */
+#file{display:none}
+.hidden{display:none!important}
+.empty{padding:50px 20px;text-align:center;color:var(--muted);font-size:14px}
+
+@media(max-width:720px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .cards{grid-template-columns:1fr}
+  h1{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- 재무 별도/연결 토글 ---------- */
+.finmode{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+.finmode button{font-family:var(--mono);font-size:11.5px;padding:8px 13px;background:transparent;border:none;color:var(--muted);cursor:pointer;transition:.15s}
+.finmode button+button{border-left:1px solid var(--line)}
+.finmode button:hover{color:var(--txt)}
+.finmode button[data-on="1"]{background:var(--panel-2);color:var(--amber);font-weight:700}
+.m-fintoggle{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex:none}
+.m-fintoggle button{font-family:var(--mono);font-size:10px;padding:3px 9px;background:transparent;border:none;color:var(--muted);cursor:pointer}
+.m-fintoggle button+button{border-left:1px solid var(--line)}
+.m-fintoggle button[data-on="1"]{background:var(--panel-2);color:var(--amber);font-weight:700}
+
+/* ---------- timeline legend (clickable filter) ---------- */
+.tl-legend{display:flex;flex-wrap:wrap;gap:8px 10px;padding:2px 0 16px;margin-bottom:20px;border-bottom:1px dashed var(--line);align-items:center}
+.tl-legend .lb{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
+.tl-legend span[data-type]{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);cursor:pointer;padding:4px 10px;border-radius:20px;border:1px solid transparent;transition:.15s}
+.tl-legend span[data-type]:hover{color:var(--txt);border-color:var(--line)}
+.tl-legend span[data-on="1"]{color:var(--txt);font-weight:600;background:var(--panel-2);border-color:var(--line)}
+.tl-legend i{width:9px;height:9px;border-radius:2px;transform:rotate(45deg);border:2px solid currentColor;display:inline-block}
+
+/* ---------- clickable KPI ---------- */
+.card{cursor:pointer}
+.kpi.clickable{cursor:pointer}
+.kpi.clickable:hover{border-color:var(--amber);transform:translateY(-2px)}
+.kpi .go{position:absolute;top:13px;right:14px;font-family:var(--mono);font-size:14px;color:var(--muted-2);transition:.15s}
+.kpi.clickable:hover .go{color:var(--amber);transform:translate(2px,-2px)}
+
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(7,9,13,.74);backdrop-filter:blur(5px);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:44px 18px;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:660px;width:100%;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.5);animation:pop .18s ease}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+.modal .mstrip{height:5px;border-radius:16px 16px 0 0}
+.mclose{position:absolute;top:13px;right:14px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;transition:.15s}
+.mclose:hover{border-color:var(--amber);color:var(--amber)}
+.mclose:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.mbody{padding:24px 26px 28px}
+.m-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.m-name{font-family:var(--disp);font-weight:700;font-size:24px;letter-spacing:-.01em;margin:6px 0 10px;line-height:1.15}
+.m-status{display:inline-block;font-family:var(--mono);font-size:11.5px;padding:4px 10px;border-radius:7px;background:var(--panel-2);color:var(--muted)}
+.m-sectors{font-size:14px;color:var(--muted);margin:13px 0 4px;line-height:1.6}
+.m-sec{margin-top:20px}
+.m-sec>h4{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-2);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.m-sec>h4::after{content:"";flex:1;height:1px;background:var(--line)}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}
+.m-row .k{font-size:11px;color:var(--muted-2)}
+.m-row .v{font-size:13.5px;color:#d6dbe6;line-height:1.5;margin-top:2px}
+.m-fin{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px}
+.m-fin th,.m-fin td{padding:5px 0;text-align:right;border-bottom:1px solid var(--line)}
+.m-fin th:first-child,.m-fin td:first-child{text-align:left;color:var(--muted)}
+.m-fin th{color:var(--muted-2);font-weight:400;font-size:11px}
+.m-fin .rev{color:var(--txt)} .m-fin .op{color:var(--cyan)}
+.m-tags{display:flex;flex-wrap:wrap;gap:6px}
+.m-tags .tag{font-size:11px}
+.m-ev{padding:11px 0;border-bottom:1px solid var(--line)}
+.m-ev:last-child{border-bottom:none}
+.m-ev .d{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.m-ev .et{font-family:var(--mono);font-size:9.5px;margin-left:8px;padding:2px 7px;border-radius:5px;border:1px solid var(--line);color:var(--muted)}
+.m-ev .tt{font-weight:600;font-size:13.5px;margin:5px 0 3px;line-height:1.35}
+.m-ev .ss{font-size:12px;color:var(--muted);line-height:1.5}
+.m-ev a{font-size:10.5px;font-family:var(--mono);color:var(--muted-2);text-decoration:none;border-bottom:1px dotted var(--muted-2)}
+.m-ev a:hover{color:var(--cyan);border-color:var(--cyan)}
+.m-none{font-size:12.5px;color:var(--muted-2);padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brandrow">
+      <div class="logo"><i></i><i></i><i></i><i></i></div>
+      <div>
+        <h1>모듈러 동종사 모니터<small>MODULAR / PREFAB · 경쟁사 동향 인텔리전스 · 사업실</small></h1>
+      </div>
+      <div class="head-meta">
+        <span class="pill"><span class="dot embedded" id="srcDot"></span><b id="srcLabel">내장 데이터</b></span>
+        <span class="pill">업데이트 <b id="upd">—</b></span>
+        <button class="btn" id="btnLocal" title="수집기(--serve)에서 최신 데이터 불러오기">로컬 서버 연결</button>
+        <button class="btn" id="btnUpload">JSON 불러오기</button>
+        <input type="file" id="file" accept="application/json,.json">
+      </div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="search">
+      <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="q" placeholder="회사명·키워드·프로젝트 검색 (예: 모듈러, MOU, 가리봉동)">
+    </div>
+    <div class="chips" id="catChips"></div>
+    <div class="finmode" id="finModeCtl" title="재무제표 기준 전환 (DART 수집 회사에 적용)">
+      <button data-m="ofs" data-on="1">별도</button><button data-m="cfs" data-on="0">연결</button>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab" data-view="profile" data-on="1">프로필<span id="tc-p"></span></button>
+    <button class="tab" data-view="timeline">동향 타임라인<span id="tc-t"></span></button>
+    <button class="tab" data-view="diagram">협력 관계도<span id="tc-d"></span></button>
+  </nav>
+
+  <section id="view-profile">
+    <div class="kpis" id="kpis"></div>
+    <div id="cardArea"></div>
+  </section>
+
+  <section id="view-timeline" class="hidden">
+    <div class="tl-legend" id="tlLegend"></div>
+    <div class="tl" id="tlArea"></div>
+  </section>
+
+  <section id="view-diagram" class="hidden">
+    <div class="diag-legend" id="diagLegend"></div>
+    <div class="diagwrap"><div id="diagArea"></div></div>
+    <p class="diag-hint">노드에 마우스를 올리면 연결된 회사와 관계가 강조됩니다. 선 위 라벨은 협력 유형입니다.</p>
+  </section>
+
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+/* ============ 기본 내장 데이터 (수집기 JSON과 동일 스키마) ============ */
+const EMBEDDED_DATA = {
+  updated_at: "2025 초기조사(수동)",
+  companies: [
+    {name:"삼성물산 건설부문",category:"시공사",status:"추진중 · 3대 신사업(자체 생산시설 없음)",home:"secc.co.kr",
+     sectors:"건축·토목·플랜트·주택 / 모듈러·에너지솔루션·플랫폼 신사업",
+     financials:{"2022":{},"2023":{},"2024":{}},
+     org:"모듈러팀(2020.12 신설, 남정현 부사장) · Urban&Infra사업부",
+     facility:"자체 생산시설 없음 · 사우디 현지 제작시설 설립 추진(네옴 속도조절로 홀딩)",
+     capa:"자체 생산 Capa 없음 · 반자동화 생산라인 개발 단계 · 사우디 철근자동화 JV 계획(홀딩)", method:"철골 모듈러 / OSC (설계·기술개발 중심, 제작은 협력)",
+     ip:["모듈러 접합부·내화시스템 R&D","적층형 3D 체적 모듈러 개발","포르타프로(라트비아)·HTA(영국) 기술협업","사우디 PIF 합작"],
+     projects:"한국건설기술연구원 스마트건설지원센터 제2센터(첫 실증) · 사우디 네옴 OSC(홀딩) · 인니 시나르마스 MOU · IFA2025 스마트모듈러홈(삼성전자)",
+     founded:"", source:"thebell 2025.04·대한경제·nate"},
+
+    {name:"현대엔지니어링",category:"시공사",status:"진출완료 · 선도",home:"hec.co.kr",
+     sectors:"플랜트·건축·주택 / LNG·태양광·SMR·모듈러 신사업",
+     financials:{"2023":{rev:88878,op:-459},"2024":{rev:88902,op:-15046},"2025":{rev:102078,op:-827}},
+     financials_cfs:{"2023":{rev:130633,op:2552},"2024":{rev:147604,op:-12401},"2025":{rev:138965,op:2779}},
+     org:"미래기술사업부(심범섭 부장) · 현대제철 H-모듈러 랩(공동 R&D)",
+     facility:"자체 생산시설 미보유 · 모듈 제작은 협력사(금강공업 진천 모듈러 전용공장) · 현대제철 H-모듈러 랩은 R&D 테스트베드(400㎡)",
+     capa:"자체 생산 Capa 없음(협력사 제작) · 고층 13층+ 설계·시공 역량", method:"H형강 고층 철골 모듈러 (설계·시공·고층화 기술 보유, 제작은 협력)",
+     ip:["건설신기술 1건+특허 20건(2012~, 총 21건)","고층 모듈러 접합기술 특허 2건(2024.06)","H형강 모듈러 구조시스템","하이브리드 내화시스템(3시간 내화)"],
+     projects:"용인 영덕 경기행복주택(13층·국내최고층 실적) · 가리봉동 행복주택(12층 246가구) · 우크라이나 재건 MOU",
+     founded:"1974 (2024 창립50주년)", source:"현대ENG 사업보고서(2026.03)·hyundai.co.kr"},
+
+    {name:"DL이앤씨",category:"시공사",status:"진출완료",home:"dlenc.co.kr",
+     sectors:"주택·토목·플랜트 / SMR·모듈러·수처리 신사업",
+     financials:{"2022":{},"2023":{rev:79945,op:3300,est:true},"2024":{rev:83184,op:2709}},
+     org:"R&D 조직(분할 후 투자 확대)",
+     facility:"—", capa:"—", method:"PC·철골 모듈러 / 무용접 커넥터",
+     ip:["모듈러 특허 40여 건(2016~)","무용접 시스템 커넥터","복합내화구조(2024)","기초-유닛 해체 재활용"],
+     projects:"전남 구례 타운형 모듈러 단독주택(26가구·국내최초) · 아파트 옥탑 모듈러",
+     founded:"", source:"asiae·datanews·dlenc IR"},
+
+    {name:"유창이앤씨",category:"제작사",status:"진출완료 · 리딩컴퍼니",home:"ycenc.com",
+     sectors:"건축 내·외장재 · 클린룸 · 모듈러 제조·시공",
+     financials:{"2023":{rev:4190,op:161},"2024":{rev:3640,op:91},"2025":{rev:3077,op:149}},
+     org:"모듈러사업부(일괄공급체계)",
+     facility:"천안 풍세산단 모듈러 전용공장(제3공장)", capa:"일 20모듈 · 연 일반 6,500 / 옥탑 3,000모듈", method:"철골 모듈러",
+     ip:["건교부 신기술 제435호","멀티락 유닛체결(제작률90%)","조달청 혁신제품(Uvista 에코학당)"],
+     projects:"건대 커먼그라운드(198모듈) · 항공대 생활관 · 남양주왕숙(현대건설 시공) · 삼성전자 스마트모듈러 MOU(2025)",
+     founded:"1974 (모듈러 2003~)", source:"유창이앤씨 감사보고서(2024~2026)"},
+
+    {name:"금강공업",category:"제작사",status:"진출완료 · 양강구도",home:"kumkangkind.com",
+     sectors:"강관·폼웍(알폼)·가설재 종합메이커 / 모듈러(브랜드 MIND)",
+     financials:{"2022":{},"2023":{},"2024":{}},
+     org:"모듈러사업부 · 계열 MDL건축사사무소(설계)",
+     facility:"진천1·음성3(중부) · 창녕(남부) · 보은(2025 인수)", capa:"진천 연 8,000+모듈", method:"철강 모듈러 (KMC공법)",
+     ip:["KMC공법 특허","공동주택 공업화주택 인정(국내최초)","국내최고층 13층 실증(2023)"],
+     projects:"용인 영덕 경기행복주택 · 가리봉동(컨소 12층) · 남극 장보고기지 · 삼성전자 AI 스마트모듈러",
+     founded:"1979 (46년, 모듈러 2006~)", source:"thebell·fnguide"},
+
+    {name:"플랜엠 (PLANM)",category:"제작사",status:"진출완료 · 예비유니콘",home:"planm.kr",
+     sectors:"모듈러 설계·제작·시공·유지 수직계열화(교육·의료·주거·숙박·상업)",
+     financials:{"2022":{},"2023":{},"2024":{rev:1208,op:291}},
+     org:"설계~시공 통합 인하우스",
+     facility:"충북 음성공장(약 5만평, 국내최대급)", capa:"연 최대 10,000모듈", method:"철골 모듈러 · 패널라이징(2주내 설치)",
+     ip:["ISO9001/14001·벤처기업","조달청 혁신제품 TOP10","EBITDA 마진 68%"],
+     projects:"전국17개 교육청 176개교·7,000모듈 · 美인디애나 롯데호텔 L7 · LH 기술협약(2025.06) · 삼성전자·LH AI모듈러(30층 적층)",
+     founded:"2020 (설립5년차)", source:"thebell·서울신문·thevc"},
+
+    {name:"스페이스웨이비",category:"제작사",status:"진출완료 · LG 협력사",home:"—",
+     sectors:"모듈러 주택 전문 제작 (LG 스마트코티지 제작 파트너)",
+     financials:{"2022":{},"2023":{},"2024":{}},
+     org:"—", facility:"확인필요", capa:"확인필요", method:"프리팹 / 모듈러",
+     ip:[],
+     projects:"LG 스마트코티지 제작(모노/듀오) · LG전자 협업",
+     founded:"", source:"헤럴드경제 2024.10"},
+
+    {name:"공간제작소",category:"제작사",status:"진출완료 · 목조 OSC · 삼성전자 AI모듈러 파트너",home:"gg-arch.co.kr",
+     sectors:"표준모델 기반 OSC 목조주택 제조(Closed-panel 프리팹) · 세컨하우스/리조트/시니어주거/공공·B2B 지향",
+     financials:{"2023":{rev:102.9,op:8.8},"2024":{rev:190.5,op:22.1},"2025":{rev:373.2,op:-4.8}},
+     org:"자체 검토 조직(설계~제조)",
+     facility:"부지 14,100평 · 생산Line 5,210평 · 창고 730평 (매입/신축)",
+     capa:"연 10,080 패널(Closed-panel, 목조)", method:"목조 Closed-panel 프리팹(Weinmann 자동화 라인)",
+     ip:["생산설비 26대(CNC 9·Robot 5, Kuka)","오버헤드크레인 4대(10t)","자동화 라인(StoreTeq·WallTeq·FrameTeq)","'25년 원가율 90.1%(수익성 회복 과제)"],
+     projects:"삼성전자 '삼성 AI 모듈러 홈' 파트너(화성 공동 쇼룸, 2026.06) · 서울대와 7층 이하 목조 공동주택 Mock-up 개발(자체 자료·유튜브, 별도 기사화 없음) · 세컨하우스/리조트/시니어/공공B2B",
+     founded:"", source:"공간제작소 검토자료 · gg-arch.co.kr · YouTube @0_ARCH"},
+
+    {name:"엔알비 (NRB)",category:"제작사",status:"진출완료 · 이동형/PC 모듈러 선도(2025.07 상장)",home:"and-rb.com",
+     sectors:"이동형 모듈러 설계·제작·임대·유지 원스톱 · 라멘조 PC(Precast Concrete) 모듈러 · 학교→고층 공동주택 확장",
+     financials:{"2023":{},"2024":{rev:528}},
+     org:"원스톱 솔루션(설계~유지)",
+     facility:"군산 1공장(국내 최대 규모 모듈러 전용공장) · 경기권 2공장 신축 추진",
+     capa:"국내 최대급(자동화 증설 중)", method:"라멘조 PC 모듈러 · DfMA 설계 · 국내 유일 모듈러 고층화 기술",
+     ip:["특허 5건+","국내 최초 이동형 학교(고창고 2018)","국내 최고층 22층 공동주택 수주","Red dot 2021·IDEA 2022","매출 72억(2021)→528억(2024)"],
+     projects:"LH OSC 로드맵 1호 · 의왕 초평 A-4BL(22층) · 세종 5-1 L5BL · 브릿지스쿨 61개교+ · 2026 수출 계획",
+     founded:"2019.10 (강건우 대표, 군산)", source:"이데일리·한국경제·THE VC"},
+
+    {name:"삼성전자",category:"가전사",status:"협업 · B2B 통합오퍼링",home:"samsung.com",
+     sectors:"DX(가전·모바일)·DS(반도체) / 스마트홈·AI홈 → 모듈러홈 협업",
+     financials:{"2022":{},"2023":{},"2024":{}},
+     org:"B2B통합오퍼링센터(박찬우 부사장)",
+     facility:"— (모듈 제작은 삼성물산)", capa:"1일 1채 수준(삼성물산 기준)", method:"AI가전+IoT 결합 스마트 모듈러홈",
+     ip:["스마트홈/AI홈 솔루션","유럽 에너지기업 파트너십(넷제로홈)"],
+     projects:"공간제작소 '삼성 AI 모듈러 홈'(단독주택형, 화성 쇼룸·3년 1만호) · 유창이앤씨 MOU(2025)·연수원(2024) · IFA2025 스마트모듈러홈(삼성물산) · LH 스마트전시(2025.11) · 북미 클레이턴",
+     founded:"", source:"thebell·fnnews 2025.09"},
+
+    {name:"LG전자",category:"가전사",status:"진출완료 · 자체 제품",home:"lge.co.kr",
+     sectors:"H&A(생활가전)·HE·VS / 프리미엄 가전+HVAC → 모듈러 주택 사업화",
+     financials:{"2022":{},"2023":{},"2024":{}},
+     org:"HS사업본부 CX담당(이향은)",
+     facility:"자체 제작공장 없음 · 국내 제작 스페이스웨이비 협력 · 유럽형은 GS건설/단우드(폴란드, IFA 2023)", capa:"스마트코티지 6종(8·14·16평, 단층/2층)", method:"프리팹(70%+) · 써마브이 히트펌프 · 태양광",
+     ip:["스마트코티지 브랜드","ZEB 플러스 최고등급(국내 프리팹 최초)"],
+     projects:"스마트코티지 국내 정식출시(2024.10) · SM엔터 강원연수원(첫 B2B) · 유럽형 IFA 2023(GS건설·단우드 제작) · 신모델16평(2025.10)",
+     founded:"", source:"헤럴드경제·khan·efnews"},
+
+    {name:"간삼건축 (간삼생활디자인)",category:"설계사",status:"진출완료 · 자회사",home:"gansam.com",
+     sectors:"건축설계 + 자회사 간삼생활디자인 프리팹 모듈러 제조(ODM/DOO)",
+     financials:{"2022":{},"2023":{},"2024":{}},
+     org:"자회사 간삼생활디자인(GHED)",
+     facility:"충북공장(프리팹 제작)", capa:"7~15평 주택·세컨드하우스 제품군", method:"프리팹 모듈러(ODM village/별장)",
+     ip:[],
+     projects:"골프장 숙소단지·클럽하우스 · ODM 별장/체험관 · 프리팹 현장건축",
+     founded:"", source:"월간SPACE·gansam.com"},
+
+    {name:"현대건설",category:"시공사",status:"진출완료 · PC 라멘조 모듈러",home:"hdec.kr",
+     sectors:"건축·주택·플랜트·토목 / 원전(SMR)·수소·모듈러 / 초개인화 주거솔루션",
+     financials:{"2023":{rev:296510,op:7854},"2024":{rev:326944,op:-12209}},
+     org:"기술연구원(용인) · 미래기술",
+     facility:"자체 모듈 생산공장 없음 · 용인 기술연구원에 PC 라멘조 모듈러 목업",
+     capa:"자체 생산 Capa 없음(R&D·목업 단계)", method:"PC 라멘조 모듈러 공법(기둥-보 + 모듈 조립)",
+     ip:["PC 라멘조 모듈러 공법 개발","한국건축구조기술사회 기술인증(국내 건설사 최초)","주거솔루션(올라이프케어·H사일런트홈·헤이슬립)","신용등급 AA-"],
+     projects:"남양주왕숙(유창이앤씨 제작) · 용인 기술연구원 PC라멘조 목업 · 로봇배송 주거단지",
+     founded:"1947", source:"현대건설 IR·한국경제·더페어"},
+
+    {name:"GS건설",category:"시공사",status:"진출완료 · 자이가이스트(자회사)",home:"gsenc.com",
+     sectors:"건축·주택·플랜트·인프라 / 모듈러(자이가이스트·지피씨·단우드) / 수처리",
+     financials:{"2023":{},"2024":{}},
+     org:"자회사 자이가이스트(국내 목조·철골 모듈러)·지피씨(PC)·단우드(폴란드 목조)",
+     facility:"자이가이스트 충남 당진 모듈러 전용 생산공장(설계~제작~시공 일괄)",
+     capa:"자이가이스트 당진공장 · 지피씨 PC공장 · 자이가이스트 매출 149억(2024)→199억(2025 3Q누적)", method:"철골·목조 모듈러(자이가이스트) · PC(지피씨) · 상부인양 양중방식(독자기술)",
+     ip:["자이가이스트 18층 철골 모듈러 공업화주택 인정(국내최초·기존12층 경신·3시간내화)","목조 단독주택 공업화주택 인정(국내최초)","상부인양 양중방식","영국 엘리먼츠 청산(2025)"],
+     projects:"LG 스마트코티지 유럽형 제작(자회사 단우드, IFA 2023) · 시흥거모 A-1BL(801세대·스틸모듈러 3개동·국내최고층) · LH 강화 130가구 27일 완공 · 엘리시안 강촌 기숙사(91실)",
+     founded:"1969", source:"thebell·이투데이·서울경제"},
+
+    {name:"삼우종합건축",category:"설계사",status:"진출완료 · 설계 1위 · 모듈러 상품 보유",home:"samoo.com",
+     sectors:"건축·도시·인테리어·엔지니어링·친환경 설계(삼성 계열) / 모듈러 상품(모피스·SSM·SAM·FIT)·FAB 모듈화",
+     financials:{"2024":{rev:3701},"2025":{rev:3493}},
+     org:"삼우 OSC R&D 센터(경기 화성 송산)",
+     facility:"설계사(자체 모듈 제작공장 없음) · 화성 송산 OSC R&D 센터",
+     capa:"설계·상품개발 중심(제작은 협력/삼성물산 연계)", method:"모듈러 상품 설계(모피스·SSM 고급형 5층+·SAM 벌크형)·FAB 모듈화·FIT 카트리지 외피",
+     ip:["국내 설계매출 1위(2014~ 12년 연속)","SSM 삼성물산 공동개발→네옴 옥사곤 빌리지","FIT Red Dot Best of Best 2024·iF 2024","건축사 158명·기술사 17명"],
+     projects:"삼성물산 SSM 공동개발 · 모피스(이동형 모듈러오피스) · 네이버 1784(이중외피) · FAB(반도체) 모듈화",
+     founded:"1976 (2014 삼성그룹 편입)", source:"samoo.com·대한경제"},
+
+    {name:"포스코이앤씨",category:"시공사",status:"진출완료(축소) · 모듈러 맏형(포스코A&C)",home:"poscoenc.com",
+     sectors:"건축·주택(더샵)·플랜트·인프라·원전(SMR) / 프리팹·스마트건설 / 모듈러(자회사 포스코A&C)",
+     financials:{"2023":{},"2024":{}},
+     org:"자회사 포스코A&C(모듈러) · 군산공장",
+     facility:"포스코A&C 군산공장(~1,000실 생산) · 단, 모듈러 사업 축소·철수 검토(2024)",
+     capa:"군산공장 ~1,000실 · 모듈러 사업 축소 국면", method:"철골 모듈러(OSC) · 포스코 강건재 활용 · Pre-fab/스마트건설",
+     ip:["국내 1호 민간 모듈러 공동주택 청담MUTO(2012)","광양 기가타운(당시 국내최고층)","포스코 강건재 기반","모듈러형 난방급탕·리모델링 수직증축"],
+     projects:"세종 6-3 통합공공임대(416가구·국내최대, 계룡건설 컨소) · LH 옹진백령 · SH 가양 라이품 · 평창올림픽 호텔 · 포항 인재창조원",
+     founded:"1994 (2023 포스코건설→포스코이앤씨)", source:"대한경제·KHARN"},
+
+    {name:"희림종합건축",category:"설계사",status:"진출완료(프로젝트 협업) · 설계·CM 강자",home:"heerim.com",
+     sectors:"건축설계·CM(건설사업관리)·감리 / 공항·스포츠·해외 재건 / 모듈러는 프로젝트 협업",
+     financials:{"2023":{rev:2286,op:74},"2025":{rev:2312,op:94}},
+     financials_cfs:{"2024":{rev:2410,op:153}},
+     org:"설계·CM 본부(모듈러 전담조직 별도 없음)",
+     facility:"설계사(자체 제작시설 없음)",
+     capa:"설계·CM 중심 · 모듈러 제작은 협력(유창 등)", method:"모듈러 설계·CM 협업(자체 제작 없음)",
+     ip:["인천국제공항 제2여객터미널 설계","해외 공항·올림픽·중동 재건 다수","월드클래스 300기업(설계업계 최초)","코스닥 상장(037440)"],
+     projects:"유창이앤씨와 하와이 모듈러 주택 공급 사업협약(2024.08) · 인천공항 T2 · 해외 재건·스포츠시설",
+     founded:"1970", source:"희림 IR·위키백과·디지털투데이"}
+  ],
+  events: [
+    {date:"2026-06-18",type:"제품출시",title:"삼성전자·공간제작소, '삼성 AI 모듈러 홈' 출시 (화성 공동 쇼룸)",companies:["삼성전자","공간제작소"],
+     summary:"목조 모듈러 전문 공간제작소(80%+ 공장제작)와 삼성전자 AI가전·스마트싱스를 결합한 '삼성 AI 모듈러 홈' 출시. 화성 공동 쇼룸(100평·20평), 평당 ~500만원·공기 90일. 3년 내 1만호, 아파트·공공주택으로 확장 목표.",url:"https://news.samsung.com/kr/삼성전자-공간제작소와-손잡고-ai-홈-기반-삼성-ai-모듈"},
+    {date:"2025-12-11",type:"입찰·수주",title:"GS건설, 시흥거모 A-1BL 수주 (국내최고층 14층 스틸모듈러 예정)",companies:["GS건설"],
+     summary:"GS건설이 시흥거모 통합형 민참 공공주택(801세대) 도급 계약. 스틸모듈러 14층 1개동은 국내최고층 예정(현대ENG 13층 경신). 정부 모듈러 활성화 정책 배경.",url:"http://www.opinionnews.co.kr/news/articleView.html?idxno=129301"},
+    {date:"2024-08-08",type:"MOU체결",title:"희림·유창이앤씨, 하와이 모듈러 주택 공급 사업협약 체결",companies:["유창이앤씨","희림종합건축"],
+     summary:"설계사 희림과 철골 모듈러 제작사 유창이앤씨가 미국 하와이 모듈러 주택 공급을 위한 사업협약을 체결. 유창의 해외(미국) 모듈러 진출 사례.",url:"https://www.dailian.co.kr/news/view/1393665"},
+    {date:"2025-10-02",type:"제품출시",title:"LG전자, 스마트코티지 16평 신모델 · ZEB 플러스 국내최초 획득",companies:["LG전자"],
+     summary:"8·16평 신모델 추가로 총 6종 라인업. 김제 스마트코티지가 프리팹 건축물 국내최초 제로에너지건축물 최고등급(ZEB 플러스) 획득, 에너지자립률 120%+.",url:"https://www.efnews.co.kr/news/articleView.html?idxno=123817"},
+    {date:"2025-09-08",type:"제품출시",title:"삼성전자, IFA 2025서 '스마트 모듈러홈' 상용화 선언 (삼성물산 협업)",companies:["삼성전자","삼성물산 건설부문"],
+     summary:"IFA2025에서 AI홈+모듈러 결합한 스마트 모듈러홈 공개. AI가전·IoT는 삼성전자, 시공은 삼성물산. 32평 3억후반~4억초, 넷제로홈. 국내외 건설사 협력 확대.",url:"https://www.thebell.co.kr/free/content/ArticleView.asp?key=202509081456222440105318"},
+    {date:"2025-09-02",type:"설비투자",title:"플랜엠, 2025 예비 유니콘 선정 / 2024 매출 1,208억",companies:["플랜엠 (PLANM)"],
+     summary:"중기부 예비 유니콘 선정. 2024 매출 1,208억·영업이익 291억(영업이익률24%, EBITDA마진68%). 176개교 7,000모듈. 내년 IPO 목표. 美·호주·중동 글로벌 진행.",url:"https://www.seoul.co.kr/news/economy/2025/09/02/20250902500123"},
+    {date:"2025-08-08",type:"MOU체결",title:"삼성물산, 사우디 PIF 모듈러 합작·인니 시나르마스 스마트시티 MOU",companies:["삼성물산 건설부문"],
+     summary:"삼성물산이 모듈러를 3대 신사업으로 사우디 중심 확대. PIF와 합작, 인도네시아 시나르마스와 스마트시티 MOU. 네옴시티 OSC 자동화 JV(노동80%·비용40% 절감 목표).",url:"https://news.nate.com/view/20250808n22543"},
+    {date:"2025-07-22",type:"설비투자",title:"금강공업, 보은 모듈러 공장 인수(범양플로이)로 생산력 강화",companies:["금강공업"],
+     summary:"범양플로이 운영 충북 보은 모듈러 공장·부지(2.6만㎡)를 79.5억원에 인수. 기존 진천공장 인접, 제2 생산라인으로 시너지 기대.",url:"https://thebell.co.kr/free/content/ArticleView.asp?key=202507221012172640104179&lcode=00"},
+    {date:"2025-07-15",type:"R&D",title:"LH·플랜엠·삼성전자, AI 접목 실험 모듈러 주택 공개(최대 30층 적층)",companies:["플랜엠 (PLANM)","삼성전자"],
+     summary:"LH·플랜엠·삼성전자가 AI 가전 접목한 실험 모듈러 주택 공개. 최대 30층 적층 구조 실험. 플랜엠 음성공장에서 목업 테스트.",url:"https://thevc.kr/planm"},
+    {date:"2025-06-01",type:"MOU체결",title:"플랜엠-LH, 모듈러 주택 기술 협약 체결",companies:["플랜엠 (PLANM)"],
+     summary:"플랜엠이 LH와 모듈러 주택 기술 협약 체결. 포브스코리아 고속성장 스타트업50 선정. 신한투자증권과 전략적 파트너십도 체결.",url:"https://www.sankun.com/blog/detail/1074"},
+    {date:"2025-03-18",type:"MOU체결",title:"유창이앤씨, 삼성전자와 스마트 모듈러 사업 MOU 체결",companies:["유창이앤씨","삼성전자"],
+     summary:"철제 모듈러 리딩컴퍼니 유창이앤씨가 삼성전자와 스마트 모듈러 관련 MOU 체결하며 사업 확장. 금강공업과 철제 모듈러 양강구도.",url:"https://www.thebell.co.kr/free/content/ArticleView.asp?key=202503171159015760102324"},
+    {date:"2024-12-15",type:"입찰·수주",title:"LG 스마트코티지 첫 B2B 고객, SM엔터 강원연수원 준공",companies:["LG전자"],
+     summary:"SM엔터 강원 연수원에 모노2·듀오1 등 3개 동 설치. 스마트코티지 사업 본격화 후 첫 기업 고객. 써마브이 히트펌프 적용.",url:"https://www.khan.co.kr/article/202412151126001"},
+    {date:"2024-11-15",type:"R&D",title:"현대엔지니어링-현대제철, H-모듈러 랩 오픈",companies:["현대엔지니어링"],
+     summary:"당진연구소에 국내 최대 실대형 모듈러 테스트베드(지상2층·연면적400㎡) 구축. H형강 모듈러 구조시스템+하이브리드 내화시스템 실증.",url:"https://www.hyundaimotorgroup.com/ko/news/CONT0000000000164555"},
+    {date:"2024-10-30",type:"제품출시",title:"LG전자, 소형 모듈러 주택 '스마트코티지' 정식 출시",companies:["LG전자"],
+     summary:"홈페이지 오픈하며 스마트코티지 정식 출시. 모노(2억~)·듀오(2.8억~). 프리팹 70%+ 사전제작, 공기 50% 단축. 제작 파트너는 스페이스웨이비. B2B 확대 방침.",url:"https://biz.heraldcorp.com/article/3835172"},
+    {date:"2024-06-01",type:"특허",title:"현대엔지니어링-현대제철, 고층 모듈러 구조·접합 기술 특허 2건 출원",companies:["현대엔지니어링"],
+     summary:"기존 접합 방식 시공성 개선한 고층 모듈러 구조·접합 기술 공동 특허 2건 출원(H-모듈러 랩 관련).",url:"https://www.hankooki.com/news/articleView.html?idxno=207899"},
+    {date:"2024-01-08",type:"R&D",title:"DL이앤씨, 모듈러 건축용 복합내화구조 개발(R&D)",companies:["DL이앤씨"],
+     summary:"DART 분기보고서 R&D 실적 중 모듈러 관련 두드러짐. 복합내화구조·무용접 커넥터 개발. 모듈러 특허 40여 건 보유. 기초-유닛 해체 재활용 기술 개발 중.",url:"https://www.datanews.co.kr/news/article.html?no=130958"}
+  ],
+  relations: [
+    {from:"삼성전자",to:"삼성물산 건설부문",label:"스마트 모듈러홈",type:"협업"},
+    {from:"삼성전자",to:"유창이앤씨",label:"스마트모듈러 MOU",type:"MOU"},
+    {from:"삼성전자",to:"플랜엠 (PLANM)",label:"AI 모듈러 실증",type:"협업"},
+    {from:"삼성전자",to:"LH",label:"AI 모듈러(30층)",type:"협업"},
+    {from:"플랜엠 (PLANM)",to:"LH",label:"기술협약 2025.06",type:"MOU"},
+    {from:"LG전자",to:"스페이스웨이비",label:"스마트코티지 제작",type:"제작"},
+    {from:"현대엔지니어링",to:"현대제철",label:"H-모듈러 랩",type:"R&D"},
+    {from:"현대엔지니어링",to:"금강공업",label:"가리봉동 컨소",type:"컨소시엄"},
+    {from:"유창이앤씨",to:"현대건설",label:"남양주왕숙",type:"협업"},
+    {from:"간삼건축 (간삼생활디자인)",to:"간삼생활디자인(제작)",label:"모듈러 자회사",type:"계열사"},
+    {from:"GS건설",to:"자이가이스트(제작)",label:"모듈러 자회사(당진공장)",type:"계열사"},
+    {from:"삼우종합건축",to:"삼성물산 건설부문",label:"SSM 공동개발",type:"협업"},
+    {from:"포스코이앤씨",to:"포스코A&C(제작)",label:"모듈러 자회사(군산공장)",type:"계열사"},
+    {from:"희림종합건축",to:"유창이앤씨",label:"하와이 모듈러 MOU(2024.08)",type:"MOU"},
+    {from:"삼성전자",to:"공간제작소",label:"삼성 AI 모듈러 홈(화성 쇼룸)",type:"협업"},
+    {from:"LG전자",to:"GS건설",label:"스마트코티지 유럽형(IFA 2023)",type:"협업"},
+    {from:"GS건설",to:"단우드(제작)",label:"유럽 목조 모듈러(제작)",type:"계열사"}
+  ]
+};
+
+/* ============ 상태 ============ */
+let DATA = EMBEDDED_DATA;
+let activeCat = "전체";
+let query = "";
+let view = "profile";
+let activeType = null;   // 타임라인 이슈유형 필터 (null = 전체)
+let finMode = "ofs";     // 재무 표시: "ofs"=별도(기본) / "cfs"=연결
+const CATS = ["시공사","제작사","가전사","설계사"];
+const CAT_VAR = {"시공사":"--cat-sigong","제작사":"--cat-jejak","가전사":"--cat-gajeon","설계사":"--cat-seolgye","공공/기타":"--cat-etc"};
+const catColor = c => `var(${CAT_VAR[c]||"--cat-etc"})`;
+const fmt = n => n==null? "—" : new Intl.NumberFormat('ko').format(n);
+const esc = s => (s||"").replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+/* ============ 필터 ============ */
+function matchCompany(c){
+  if(activeCat!=="전체" && c.category!==activeCat) return false;
+  if(!query) return true;
+  const hay = [c.name,c.sectors,c.projects,c.status,(c.ip||[]).join(" "),c.method,c.facility].join(" ").toLowerCase();
+  return hay.includes(query);
+}
+function matchEvent(e){
+  const cats = new Set((e.companies||[]).map(n=>{const c=DATA.companies.find(x=>x.name===n);return c?c.category:null;}));
+  if(activeCat!=="전체" && !cats.has(activeCat)) return false;
+  if(!query) return true;
+  const hay = [e.title,e.summary,e.type,(e.companies||[]).join(" ")].join(" ").toLowerCase();
+  return hay.includes(query);
+}
+
+/* ============ 렌더: 카테고리 칩 ============ */
+function renderChips(){
+  const el = document.getElementById('catChips');
+  const items = [["전체","전체"]].concat(CATS.map(c=>[c,c]));
+  el.innerHTML = items.map(([c])=>{
+    const sw = c==="전체" ? "" : `<span class="sw" style="background:${catColor(c)}"></span>`;
+    return `<button class="chip" data-cat="${c}" data-on="${activeCat===c?1:0}">${sw}${c}</button>`;
+  }).join("");
+  el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{activeCat=b.dataset.cat;renderChips();renderAll();});
+}
+
+/* ============ 렌더: KPI ============ */
+function renderKPI(){
+  const comp = DATA.companies;
+  const evs = DATA.events;
+  const mou = evs.filter(e=>e.type==="MOU체결").length;
+  const pat = evs.filter(e=>e.type==="특허").length;
+  const data = [
+    [comp.length,"추적 기업","profile","전체 프로필 보기"],
+    [evs.length,"수집 동향","timeline","타임라인으로 이동"],
+    [mou,"MOU 체결","mou","MOU 동향만 보기"],
+    [pat,"특허 출원","patent","특허 동향만 보기"]
+  ];
+  document.getElementById('kpis').innerHTML = data.map(([n,l,act,tip])=>
+    `<div class="kpi clickable" data-act="${act}" title="${tip}"><span class="go">↗</span><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+  document.querySelectorAll('.kpi').forEach(k=>k.onclick=()=>kpiAction(k.dataset.act));
+}
+
+/* ============ 렌더: 프로필 카드 ============ */
+function pickFin(c){
+  // finMode에 따라 별도/연결 데이터 선택. 연결이 없으면 별도로 대체(라벨로 표시).
+  const ofs = c.financials||{}, cfs = c.financials_cfs||null;
+  const cfsHas = cfs && Object.keys(cfs).some(y=>cfs[y]&&(cfs[y].rev!=null||cfs[y].op!=null));
+  if(finMode==="cfs" && cfsHas) return {f:cfs, label:" · 연결"};
+  if(cfsHas) return {f:ofs, label:" · 별도"};   // 연결 데이터가 있는 회사만 별도/연결 구분 표기
+  return {f:ofs, label:""};                      // 수동입력·단일 출처는 구분 없이 표기
+}
+function finTable(c){
+  const {f, label} = pickFin(c);
+  const yrs = Object.keys(f).sort();
+  const has = yrs.some(y=>f[y] && (f[y].rev!=null||f[y].op!=null));
+  const need = !has ? `<span class="need">DART 연동 필요</span>` : "";
+  let rows = `<tr><th>연도</th>${yrs.map(y=>`<th>${y}</th>`).join("")}</tr>`;
+  rows += `<tr><td>매출</td>${yrs.map(y=>`<td class="rev">${f[y]&&f[y].rev!=null?fmt(f[y].rev)+(f[y].est?"*":""):"—"}</td>`).join("")}</tr>`;
+  rows += `<tr><td>영업익</td>${yrs.map(y=>`<td class="op">${f[y]&&f[y].op!=null?fmt(f[y].op)+(f[y].est?"*":""):"—"}</td>`).join("")}</tr>`;
+  return `<div class="fin"><div class="fin-head"><span>재무 (억원${label})</span>${need}</div><table class="fintab">${rows}</table></div>`;
+}
+function card(c){
+  const col = catColor(c.category);
+  const tags = (c.ip||[]).slice(0,4).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+  return `<article class="card" data-name="${esc(c.name)}" tabindex="0" role="button">
+    <div class="strip" style="background:${col}"></div>
+    <div class="body">
+      <div class="name">${esc(c.name)}</div>
+      <div class="status">${esc(c.status)}</div>
+      <div class="sectors">${esc(c.sectors)}</div>
+      ${finTable(c)}
+      <div class="meta-list">
+        ${c.facility&&c.facility!=="—"?`<div class="mrow"><span class="k">생산시설</span><span class="v">${esc(c.facility)}</span></div>`:""}
+        ${c.capa&&c.capa!=="—"?`<div class="mrow"><span class="k">생산Capa</span><span class="v">${esc(c.capa)}</span></div>`:""}
+        ${c.org&&c.org!=="—"?`<div class="mrow"><span class="k">전담조직</span><span class="v">${esc(c.org)}</span></div>`:""}
+        <div class="mrow"><span class="k">주요실적</span><span class="v">${esc(c.projects)}</span></div>
+      </div>
+      ${tags?`<div class="tags">${tags}</div>`:""}
+      <div class="src">출처 · ${esc(c.source||"")}</div>
+    </div>
+  </article>`;
+}
+function renderCards(){
+  const area = document.getElementById('cardArea');
+  const shown = DATA.companies.filter(matchCompany);
+  document.getElementById('tc-p').textContent = shown.length;
+  if(!shown.length){area.innerHTML=`<div class="empty">조건에 맞는 회사가 없습니다.</div>`;return;}
+  const groups = activeCat==="전체" ? CATS : [activeCat];
+  area.innerHTML = groups.map(cat=>{
+    const list = shown.filter(c=>c.category===cat);
+    if(!list.length) return "";
+    return `<div class="catgroup">
+      <h2><span class="bar" style="background:${catColor(cat)}"></span>${cat}<em>${list.length}</em></h2>
+      <div class="cards">${list.map(card).join("")}</div>
+    </div>`;
+  }).join("");
+  area.querySelectorAll('.card').forEach(el=>{
+    const open=()=>{const c=DATA.companies.find(x=>x.name===el.dataset.name);if(c)openCompany(c);};
+    el.onclick=open;
+    el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}};
+  });
+}
+
+/* ============ 렌더: 타임라인 ============ */
+function renderTimeline(){
+  const area = document.getElementById('tlArea');
+  const TL_TYPES=[["MOU체결","var(--green)"],["입찰·수주","var(--amber)"],["특허","var(--violet)"],["R&D","var(--cyan)"],["제품출시","#EC6A9C"],["설비투자","var(--slate)"],["기타","var(--muted-2)"]];
+  const legendEl = document.getElementById('tlLegend');
+  legendEl.innerHTML =
+    `<span class="lb">유형 클릭 → 필터</span>` +
+    `<span data-type="" data-on="${activeType===null?1:0}"><i style="border-color:var(--muted)"></i>전체</span>` +
+    TL_TYPES.map(([t,c])=>`<span data-type="${t}" data-on="${activeType===t?1:0}"><i style="border-color:${c}"></i>${t}</span>`).join("");
+  legendEl.querySelectorAll('span[data-type]').forEach(s=>{
+    s.onclick=()=>{const t=s.dataset.type; activeType=(t===""?null:(activeType===t?null:t)); renderTimeline();};
+  });
+  const shown = DATA.events.filter(matchEvent).filter(e=>!activeType||e.type===activeType).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('tc-t').textContent = shown.length;
+  if(!shown.length){area.innerHTML=`<div class="empty">${activeType?`'${activeType}' 유형의 `:""}조건에 맞는 동향이 없습니다.</div>`;return;}
+  area.innerHTML = shown.map(e=>{
+    const cos = (e.companies||[]).map(n=>{
+      const c=DATA.companies.find(x=>x.name===n);
+      const col = c?catColor(c.category):"var(--muted-2)";
+      return `<span class="cochip" style="border-color:${col};color:${col}">${esc(n)}</span>`;
+    }).join("");
+    const link = e.url?`<a class="slink" href="${esc(e.url)}" target="_blank" rel="noopener">출처 ↗</a>`:"";
+    return `<div class="ev type-${esc(e.type)}">
+      <span class="date">${esc(e.date)}</span><span class="etype">${esc(e.type)}</span>
+      <div class="etitle">${esc(e.title)}</div>
+      <div class="esum">${esc(e.summary)}</div>
+      <div class="ecos">${cos}${link}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ============ 렌더: 관계도 ============ */
+function renderDiagram(){
+  document.getElementById('tc-d').textContent = (DATA.relations||[]).length;
+  // 카테고리별 컬럼 배치 + 보조 노드(공공/기타)
+  const auxCat = {"LH":"공공/기타","현대제철":"공공/기타","현대건설":"시공사","간삼생활디자인(제작)":"제작사","자이가이스트(제작)":"제작사","포스코A&C(제작)":"제작사","단우드(제작)":"제작사"};
+  const nodeCat = name=>{const c=DATA.companies.find(x=>x.name===name);return c?c.category:(auxCat[name]||"공공/기타");};
+  // 등장 노드 수집
+  const names = new Set();
+  (DATA.relations||[]).forEach(r=>{names.add(r.from);names.add(r.to);});
+  const cols = ["가전사","시공사","제작사","설계사","공공/기타"];
+  const byCol = {}; cols.forEach(c=>byCol[c]=[]);
+  [...names].forEach(n=>{const cat=nodeCat(n);(byCol[cat]||byCol["공공/기타"]).push(n);});
+  // 좌표
+  const NW=150,NH=40,colGap=44,rowGap=20,padX=24,padY=28;
+  const colX = {}; let x=padX;
+  cols.forEach(c=>{colX[c]=x;x+=NW+colGap;});
+  const width = x - colGap + padX;
+  let maxRows=0; cols.forEach(c=>maxRows=Math.max(maxRows,byCol[c].length));
+  const height = padY*2 + maxRows*(NH+rowGap);
+  const pos={};
+  cols.forEach(c=>{
+    const list=byCol[c]; const colH=list.length*(NH+rowGap)-rowGap;
+    const startY=(height-colH)/2;
+    list.forEach((n,i)=>{pos[n]={x:colX[c],y:startY+i*(NH+rowGap),cat:c};});
+  });
+  // 엣지
+  const edges=(DATA.relations||[]).map((r,i)=>{
+    const a=pos[r.from],b=pos[r.to]; if(!a||!b)return"";
+    const x1=a.x+NW,y1=a.y+NH/2,x2=b.x,y2=b.y+NH/2;
+    const mx=(x1+x2)/2;
+    const d=`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+    const lx=mx,ly=(y1+y2)/2-4;
+    return `<path class="link" data-i="${i}" d="${d}"/>
+      <text class="edgelabel" data-i="${i}" x="${lx}" y="${ly}" text-anchor="middle" style="opacity:0">${esc(r.label)}</text>`;
+  }).join("");
+  // 노드
+  const nodes=[...names].map(n=>{
+    const p=pos[n]; const col=catColor(p.cat);
+    return `<g class="node" data-name="${esc(n)}">
+      <rect x="${p.x}" y="${p.y}" width="${NW}" height="${NH}" rx="8" fill="var(--panel-2)" stroke="${col}" stroke-width="1.5"/>
+      <rect x="${p.x}" y="${p.y}" width="4" height="${NH}" rx="2" fill="${col}"/>
+      <text x="${p.x+14}" y="${p.y+NH/2+4}">${esc(n.length>13?n.slice(0,12)+'…':n)}</text>
+    </g>`;
+  }).join("");
+  const svg=`<svg id="diagSvg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="max-width:none">
+    <g class="links">${edges}</g><g class="nodes">${nodes}</g></svg>`;
+  document.getElementById('diagArea').innerHTML=svg;
+  // legend
+  document.getElementById('diagLegend').innerHTML = ["시공사","제작사","가전사","설계사","공공/기타"].map(c=>
+    `<span><span class="sw" style="background:${catColor(c)}"></span>${c}</span>`).join("");
+  // interaction
+  const el=document.getElementById('diagSvg');
+  const adj={}; (DATA.relations||[]).forEach((r,i)=>{(adj[r.from]=adj[r.from]||[]).push({i,other:r.to});(adj[r.to]=adj[r.to]||[]).push({i,other:r.from});});
+  el.querySelectorAll('.node').forEach(g=>{
+    g.addEventListener('mouseenter',()=>{
+      const name=g.dataset.name; el.classList.add('dim');
+      const hotNodes=new Set([name]); const hotEdges=new Set();
+      (adj[name]||[]).forEach(({i,other})=>{hotNodes.add(other);hotEdges.add(i);});
+      el.querySelectorAll('.node').forEach(n=>n.classList.toggle('hot',hotNodes.has(n.dataset.name)));
+      el.querySelectorAll('.link').forEach(p=>{const on=hotEdges.has(+p.dataset.i);p.classList.toggle('hot',on);});
+      el.querySelectorAll('.edgelabel').forEach(t=>t.style.opacity=hotEdges.has(+t.dataset.i)?1:0);
+    });
+    g.addEventListener('mouseleave',()=>{
+      el.classList.remove('dim');
+      el.querySelectorAll('.node').forEach(n=>n.classList.remove('hot'));
+      el.querySelectorAll('.link').forEach(p=>p.classList.remove('hot'));
+      el.querySelectorAll('.edgelabel').forEach(t=>t.style.opacity=0);
+    });
+  });
+}
+
+/* ============ 뷰 전환 ============ */
+function renderAll(){renderKPI();renderCards();renderTimeline();renderDiagram();}
+function switchView(v){
+  view=v;
+  document.querySelectorAll('.tab').forEach(t=>t.dataset.on=t.dataset.view===v?1:0);
+  document.getElementById('view-profile').classList.toggle('hidden',v!=="profile");
+  document.getElementById('view-timeline').classList.toggle('hidden',v!=="timeline");
+  document.getElementById('view-diagram').classList.toggle('hidden',v!=="diagram");
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));
+
+/* ============ 모달 ============ */
+const overlay=document.getElementById('overlay');
+const modalEl=document.getElementById('modal');
+function openModal(inner){modalEl.innerHTML=inner;overlay.classList.add('open');document.body.style.overflow='hidden';const c=modalEl.querySelector('.mclose');if(c)c.focus();}
+function closeModal(){overlay.classList.remove('open');document.body.style.overflow='';}
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==="Escape"&&overlay.classList.contains('open'))closeModal();});
+
+function evRowMini(e){
+  const cos=(e.companies||[]).map(esc).join(" · ");
+  const link=e.url?` <a href="${esc(e.url)}" target="_blank" rel="noopener">출처 ↗</a>`:"";
+  return `<div class="m-ev"><span class="d">${esc(e.date||"—")}</span><span class="et">${esc(e.type)}</span>
+    <div class="tt">${esc(e.title)}</div><div class="ss">${esc(e.summary)}</div>
+    <div style="margin-top:6px;font-size:11px;color:var(--muted-2)">${cos}${link}</div></div>`;
+}
+
+function openCompany(c){
+  window.__lastCo = c.name;   // 토글 시 모달 재렌더용
+  const col=catColor(c.category);
+  const {f, label} = pickFin(c); const yrs=Object.keys(f).sort();
+  const hasFin=yrs.some(y=>f[y]&&(f[y].rev!=null||f[y].op!=null));
+  const cfs=c.financials_cfs||null;
+  const cfsHas=cfs && Object.keys(cfs).some(y=>cfs[y]&&(cfs[y].rev!=null||cfs[y].op!=null));
+  const finToggle = cfsHas ? `<span class="m-fintoggle">
+      <button data-m="ofs" data-on="${finMode==="ofs"?1:0}" onclick="setFinMode('ofs')">별도</button><button data-m="cfs" data-on="${finMode==="cfs"?1:0}" onclick="setFinMode('cfs')">연결</button></span>` : "";
+  let finHtml;
+  if(yrs.length){
+    finHtml=`<table class="m-fin"><tr><th>연도</th>${yrs.map(y=>`<th>${y}</th>`).join("")}</tr>`
+      +`<tr><td>매출</td>${yrs.map(y=>`<td class="rev">${f[y]&&f[y].rev!=null?fmt(f[y].rev)+(f[y].est?"*":""):"—"}</td>`).join("")}</tr>`
+      +`<tr><td>영업이익</td>${yrs.map(y=>`<td class="op">${f[y]&&f[y].op!=null?fmt(f[y].op)+(f[y].est?"*":""):"—"}</td>`).join("")}</tr></table>`
+      +(hasFin?"":`<div class="m-none">재무 데이터 미연동 — collector.py 실행 후 DART에서 자동 반영됩니다.</div>`);
+  } else finHtml=`<div class="m-none">재무 항목 없음</div>`;
+  const tags=(c.ip||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("") || `<span class="m-none">등록된 항목 없음</span>`;
+  const meta=[["전담조직",c.org],["생산시설",c.facility],["생산Capa",c.capa],["생산방식",c.method],["설립·업력",c.founded],["홈페이지",c.home]]
+    .filter(([k,v])=>v&&v!=="—"&&v!=="")
+    .map(([k,v])=>`<div class="m-row"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("");
+  const related=DATA.events.filter(e=>(e.companies||[]).includes(c.name)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const relHtml=related.length?related.map(evRowMini).join(""):`<div class="m-none">관련 동향이 아직 없습니다.</div>`;
+  openModal(`
+    <div class="mstrip" style="background:${col}"></div>
+    <button class="mclose" onclick="closeModal()" aria-label="닫기">✕</button>
+    <div class="mbody">
+      <div class="m-eyebrow" style="color:${col}">${esc(c.category)}</div>
+      <div class="m-name">${esc(c.name)}</div>
+      <span class="m-status">${esc(c.status||"")}</span>
+      <div class="m-sectors">${esc(c.sectors||"")}</div>
+      <div class="m-sec"><h4>재무 (억원${label})${finToggle}</h4>${finHtml}</div>
+      <div class="m-sec"><h4>기본 정보</h4><div class="m-grid">${meta}</div></div>
+      <div class="m-sec"><h4>주요 수행 프로젝트</h4><div class="m-row"><div class="v">${esc(c.projects||"—")}</div></div></div>
+      <div class="m-sec"><h4>인증 · 특허 · 기술</h4><div class="m-tags">${tags}</div></div>
+      <div class="m-sec"><h4>관련 동향 ${related.length?`(${related.length})`:""}</h4>${relHtml}</div>
+      <div class="src" style="margin-top:18px">출처 · ${esc(c.source||"")}</div>
+    </div>`);
+}
+
+function openEvents(type,label){
+  window.__lastCo = null;
+  const list=DATA.events.filter(e=>e.type===type).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const body=list.length?list.map(evRowMini).join(""):`<div class="m-none">해당 유형의 동향이 없습니다.</div>`;
+  openModal(`
+    <div class="mstrip" style="background:var(--amber)"></div>
+    <button class="mclose" onclick="closeModal()" aria-label="닫기">✕</button>
+    <div class="mbody">
+      <div class="m-eyebrow">동향 필터</div>
+      <div class="m-name">${esc(label)} <span style="font-family:var(--mono);font-size:15px;color:var(--muted)">${list.length}건</span></div>
+      <div class="m-sec" style="margin-top:14px">${body}</div>
+    </div>`);
+}
+
+function kpiAction(act){
+  if(act==="profile"){activeCat="전체";query="";document.getElementById('q').value="";renderChips();renderAll();switchView('profile');window.scrollTo({top:0,behavior:'smooth'});}
+  else if(act==="timeline"){switchView('timeline');document.querySelector('.tabs').scrollIntoView({behavior:'smooth',block:'start'});}
+  else if(act==="mou"){openEvents("MOU체결","MOU 체결 동향");}
+  else if(act==="patent"){openEvents("특허","특허 출원 동향");}
+}
+
+/* ============ 재무 별도/연결 전환 ============ */
+function setFinMode(m){
+  finMode = m;
+  document.querySelectorAll('#finModeCtl button').forEach(b=>b.dataset.on = b.dataset.m===m ? 1 : 0);
+  renderCards();
+  // 상세 모달이 열려 있으면 같은 회사로 다시 렌더
+  if(overlay.classList.contains('open') && window.__lastCo){
+    const c = DATA.companies.find(x=>x.name===window.__lastCo);
+    if(c) openCompany(c);
+  }
+}
+document.querySelectorAll('#finModeCtl button').forEach(b=>b.onclick=()=>setFinMode(b.dataset.m));
+
+/* ============ 검색 ============ */
+document.getElementById('q').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();renderAll();});
+
+/* ============ 데이터 로딩 ============ */
+function applyData(d,label,live){
+  if(!d||!d.companies){alert("올바른 데이터 형식이 아닙니다 (companies 필드 없음).");return;}
+  DATA=d;
+  document.getElementById('upd').textContent=d.updated_at||"—";
+  document.getElementById('srcLabel').textContent=label;
+  document.getElementById('srcDot').className="dot"+(live?"":" embedded");
+  renderChips();renderAll();
+}
+document.getElementById('btnUpload').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').addEventListener('change',ev=>{
+  const f=ev.target.files[0]; if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{applyData(JSON.parse(rd.result),"업로드 JSON",true);}catch(e){alert("JSON 파싱 실패: "+e.message);}};
+  rd.readAsText(f);
+});
+document.getElementById('btnLocal').onclick=async()=>{
+  const btn=document.getElementById('btnLocal'); const old=btn.textContent; btn.textContent="연결 중…";
+  const ports=[8765,5000,8000];
+  for(const p of ports){
+    try{
+      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),1500);
+      const res=await fetch(`http://localhost:${p}/api/data`,{signal:ctrl.signal});
+      clearTimeout(t);
+      if(res.ok){const d=await res.json();applyData(d,`로컬 :${p}`,true);btn.textContent="연결됨";setTimeout(()=>btn.textContent=old,1500);return;}
+    }catch(e){/* try next */}
+  }
+  btn.textContent="연결 실패";
+  alert("로컬 수집기에 연결하지 못했습니다.\n\n터미널에서 아래를 실행한 뒤 다시 시도하세요:\n  python collector.py --serve\n\n(수집기가 localhost:8765 에서 데이터를 제공합니다)");
+  setTimeout(()=>btn.textContent=old,1800);
+};
+
+/* ============ init ============ */
+document.getElementById('upd').textContent=DATA.updated_at;
+renderChips();renderAll();
+// 데이터 로드 우선순위: ① 로컬 수집기(localhost) → ② 같은 폴더의 dashboard_data.json(웹 배포용) → ③ 내장 데이터
+(async()=>{
+  try{
+    const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),1200);
+    const res=await fetch('http://localhost:8765/api/data',{signal:ctrl.signal});
+    clearTimeout(t);
+    if(res.ok){applyData(await res.json(),"로컬 :8765",true);return;}
+  }catch(e){/* 다음 소스로 */}
+  try{
+    // 웹 서버(GitHub Pages, Netlify 등)에 dashboard_data.json 을 함께 올리면 자동 로드됨
+    const res=await fetch('dashboard_data.json?t='+Date.now());
+    if(res.ok){applyData(await res.json(),"게시 데이터",true);}
+  }catch(e){/* 내장 데이터 유지 (file:// 로 열면 이 단계는 항상 건너뜀) */}
+})();
+</script>
+</body>
+</html>
