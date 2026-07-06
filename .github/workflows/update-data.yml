@@ -2,7 +2,7 @@ name: 모듈러 동향 자동 갱신
 
 on:
   schedule:
-    - cron: '30 22 * * *'
+    - cron: '0 19 * * *'
   workflow_dispatch: {}
 
 permissions:
