@@ -143,6 +143,9 @@ h1 small{display:block;font-family:var(--body);font-weight:500;font-size:12.5px;
 .cochip{font-size:11px;padding:2px 9px;border-radius:20px;border:1px solid var(--line);color:var(--txt)}
 .ev a.slink{font-size:11px;font-family:var(--mono);color:var(--muted-2);text-decoration:none;border-bottom:1px dotted var(--muted-2)}
 .ev a.slink:hover{color:var(--cyan);border-color:var(--cyan)}
+.likebtn{margin-left:8px;font-size:11px;padding:2px 9px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
+.likebtn:hover{border-color:var(--amber);color:var(--amber)}
+.likebtn:disabled{opacity:.7;cursor:default}
 
 /* ---------- diagram ---------- */
 .diagwrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:6px;overflow-x:auto}
@@ -760,7 +763,7 @@ function renderTimeline(){
       <span class="date">${esc(e.date)}</span><span class="etype">${esc(e.type)}</span>
       <div class="etitle">${esc(e.title)}</div>
       <div class="esum">${esc(e.summary)}</div>
-      <div class="ecos">${cos}${link}<button class="likebtn" data-url="${esc(e.url||'')}" title="이 기사를 전략 큐레이션 후보로 추천">👍 추천</button></div>
+      <div class="ecos">${cos}${link}<button class="likebtn" data-url="${esc(e.url||'')}" title="이 기사를 전략 큐레이션 후보로 추천"> 추천</button></div>
     </div>`;
   }).join("");
   area.querySelectorAll('.likebtn').forEach(btn=>{btn.onclick=()=>recommendArticle(btn.dataset.url, btn);});
