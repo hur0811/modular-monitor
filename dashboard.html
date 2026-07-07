@@ -606,19 +606,21 @@ function recommendArticle(url, btn){
 
   const companiesText = (e.companies || []).join(", ");
 
-  const params = new URLSearchParams();
-  params.set(FORMS_FIELDS.title, e.title || "");
-  params.set(FORMS_FIELDS.url, e.url || "");
-  params.set(FORMS_FIELDS.date, e.date || "");
-  params.set(FORMS_FIELDS.type, e.type || "");
-  params.set(FORMS_FIELDS.summary, e.summary || "");
-  params.set(FORMS_FIELDS.companies, companiesText);
+function encField(name, value){
+  return name + "=" + encodeURIComponent(value || "");
+}
 
-  const finalUrl = FORMS_BASE_URL + "&" + params.toString();
+const finalUrl = FORMS_BASE_URL + "&" +
+  encField(FORMS_FIELDS.title, e.title) + "&" +
+  encField(FORMS_FIELDS.url, e.url) + "&" +
+  encField(FORMS_FIELDS.date, e.date) + "&" +
+  encField(FORMS_FIELDS.type, e.type) + "&" +
+  encField(FORMS_FIELDS.summary, e.summary) + "&" +
+  encField(FORMS_FIELDS.companies, companiesText);
 
   window.open(finalUrl, "_blank");
 
-  if(btn){ btn.textContent = "✅ 양식 열림"; }
+  if(btn){ btn.textContent = "전송 완료"; }
 }
   /* ============ 상태 ============ */
 let DATA = EMBEDDED_DATA;
