@@ -585,7 +585,39 @@ const EMBEDDED_DATA = {
   }
 };
 
-/* ============ 상태 ============ */
+/* ============= Forms 연동 (전략 큐레이션 추천 버튼) ============= */
+const FORMS_BASE_URL = "https://forms.office.com/Pages/ResponsePage.aspx?id=N-ryuSozK0O3ROz8l2Or_cLvC1yTZkxAregm3vAZ8YZUMEdEUjJYS0o3VDU5WEJDTzZKSFlHWDAxQi4u";
+
+const FORMS_FIELDS = {
+  title: "rb66056e9efe34498a25fe71fed950a5c",
+  url: "r01532d820a7d41038a9f9e04765cc5d6",
+  date: "r4b619c47869c4101941a58267087c5b0",
+  type: "r425d6fde586f4f2d804abbba205961b0",
+  summary: "r792aa6810bef4e4cba3639c1f326c102",
+  companies: "rf276e56f64b0407e9c8a89094d6ad25e"
+};
+
+function recommendArticle(url, btn){
+  const e = DATA.events.find(x => x.url === url);
+  if(!e) return;
+
+  const companiesText = (e.companies || []).join(", ");
+
+  const params = new URLSearchParams();
+  params.set(FORMS_FIELDS.title, e.title || "");
+  params.set(FORMS_FIELDS.url, e.url || "");
+  params.set(FORMS_FIELDS.date, e.date || "");
+  params.set(FORMS_FIELDS.type, e.type || "");
+  params.set(FORMS_FIELDS.summary, e.summary || "");
+  params.set(FORMS_FIELDS.companies, companiesText);
+
+  const finalUrl = FORMS_BASE_URL + "&" + params.toString();
+
+  window.open(finalUrl, "_blank");
+
+  if(btn){ btn.textContent = "✅ 양식 열림"; }
+}
+  /* ============ 상태 ============ */
 let DATA = EMBEDDED_DATA;
 let activeCat = "전체";
 let query = "";
@@ -728,9 +760,10 @@ function renderTimeline(){
       <span class="date">${esc(e.date)}</span><span class="etype">${esc(e.type)}</span>
       <div class="etitle">${esc(e.title)}</div>
       <div class="esum">${esc(e.summary)}</div>
-      <div class="ecos">${cos}${link}</div>
+      <div class="ecos">${cos}${link}<button class="likebtn" data-url="${esc(e.url||'')}" title="이 기사를 전략 큐레이션 후보로 추천">👍 추천</button></div>
     </div>`;
   }).join("");
+  area.querySelectorAll('.likebtn').forEach(btn=>{btn.onclick=()=>recommendArticle(btn.dataset.url, btn);});
 }
 
 /* ============ 렌더: 관계도 ============ */
