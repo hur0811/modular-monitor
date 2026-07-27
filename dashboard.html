@@ -932,7 +932,7 @@ function deleteCurated(id){
   const idx = items.findIndex(x=>x.id===id);
   if(idx===-1) return;
   const it = items[idx];
-  if(!confirm(`이 카드를 삭제할까요?\n\n"${it.title||''}"\n\n삭제 후 curated.json 전체 내용이 클립보드에 복사됩니다.\nGitHub의 curated.json에 붙여넣고 커밋해야 실제로 반영됩니다.`)) return;
+  if(!confirm(`이 카드를 삭제할까요?\n\n"${it.title||''}"\n\n삭제 확인 시:\n1) 업데이트된 curated.json이 클립보드에 복사됩니다.\n2) 삭제 알림 메일 작성 화면이 열립니다 (jhhur01@gsenc.com).`)) return;
 
   items.splice(idx,1);
   DATA.curated.updated_at = new Date().toISOString().slice(0,10) + " (수동 큐레이션)";
@@ -944,11 +944,30 @@ function deleteCurated(id){
     }
     return Promise.reject();
   };
+
+  // 삭제 알림 메일 (누가 눌렀든 소유자에게 기록이 남도록)
+  const notifyEmail = "jhhur01@gsenc.com";
+  const subject = `[모듈러 대시보드] 큐레이션 카드 삭제 요청 - ${it.title||""}`;
+  const bodyLines = [
+    "전략 큐레이션 카드 삭제가 요청되었습니다.",
+    "",
+    "제목: " + (it.title||""),
+    "출처: " + (it.source||""),
+    "날짜: " + (it.date||""),
+    "URL: " + (it.url||""),
+    "요청 시각: " + new Date().toLocaleString("ko-KR"),
+    "",
+    "실제 반영하려면 curated.json에서 위 항목을 삭제(또는 클립보드에 복사된 최신 내용으로 교체) 후 커밋해주세요."
+  ];
+  const mailtoUrl = `mailto:${notifyEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
+
   doCopy().then(()=>{
-    alert("삭제됐습니다. 업데이트된 curated.json 전체 내용이 클립보드에 복사됐어요.\nGitHub → curated.json → 기존 내용 전체 교체 → 커밋 순서로 반영해주세요.");
+    alert("삭제됐습니다. 업데이트된 curated.json 전체 내용이 클립보드에 복사됐어요.\n이어서 알림 메일 작성 화면이 열립니다 — '보내기'를 눌러야 실제로 전달됩니다.");
   }).catch(()=>{
-    alert("삭제는 됐지만 클립보드 복사에 실패했어요. 브라우저 개발자 콘솔(F12)에서 DATA.curated를 확인해 직접 복사해주세요.");
+    alert("삭제는 됐지만 클립보드 복사에 실패했어요. 이어서 열리는 메일에서 삭제 내용을 확인해주세요.");
     console.log(jsonText);
+  }).finally(()=>{
+    window.open(mailtoUrl, "_blank");
   });
 
   closeModal();
