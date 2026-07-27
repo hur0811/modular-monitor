@@ -229,11 +229,8 @@ svg.dim .link.hot{opacity:1;stroke-width:2.2}
 .cur-chip:focus-visible{outline:2px solid var(--color-action-primary);outline-offset:2px}
 .cur-chip[data-on="1"]{background:var(--color-action-primary);color:#fff;border-color:var(--color-action-primary);font-weight:700}
 .cur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-.cur-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--color-action-primary);border-radius:var(--radius-md);padding:18px 20px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:9px;position:relative}
+.cur-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--color-action-primary);border-radius:var(--radius-md);padding:18px 20px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:9px}
 .cur-card:hover{border-color:var(--color-border-strong);box-shadow:var(--shadow-level-2)}
-.cur-del{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted-2);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.15s}
-.cur-card:hover .cur-del{opacity:1}
-.cur-del:hover{border-color:var(--color-status-danger);color:var(--color-status-danger);background:rgba(230,59,59,.08)}
 .cur-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .cur-cat{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--color-action-primary);background:rgba(15,111,255,.10);padding:3px 9px;border-radius:6px;white-space:nowrap}
 .cur-date{font-family:var(--mono);font-size:11px;color:var(--muted)}
@@ -259,10 +256,6 @@ svg.dim .link.hot{opacity:1;stroke-width:2.2}
 .cur-note svg{flex:none;margin-top:1px;color:var(--color-action-primary)}
 .cur-link{display:inline-block;margin-top:20px;font-family:var(--mono);font-size:12.5px;color:var(--color-action-primary);text-decoration:none;border:1px solid var(--color-action-primary);border-radius:var(--radius-sm);padding:9px 16px;transition:.15s}
 .cur-link:hover{background:var(--color-action-primary);color:#fff}
-.m-cur-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.m-cur-actions .cur-link{margin-top:20px}
-.cur-del-lg{margin-top:20px;font-family:var(--mono);font-size:12.5px;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 16px;cursor:pointer;transition:.15s}
-.cur-del-lg:hover{border-color:var(--color-status-danger);color:var(--color-status-danger);background:rgba(230,59,59,.06)}
 
 /* ---------- timeline legend (clickable filter) ---------- */
 .tl-legend{display:flex;flex-wrap:wrap;gap:8px 10px;padding:2px 0 16px;margin-bottom:20px;border-bottom:1px dashed var(--line);align-items:center}
@@ -913,9 +906,6 @@ function renderCurated(){
     const tags=(it.tags||[]).slice(0,4).map(t=>`<span class="cur-tag">${esc(t)}</span>`).join("");
     const first=(it.summary&&it.summary[0])?esc(it.summary[0]):"";
     return `<article class="cur-card" onclick="openCurated(${gi})">
-      <button class="cur-del" onclick="event.stopPropagation();deleteCurated('${esc(it.id||'')}')" title="이 카드 삭제">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13"/></svg>
-      </button>
       <div class="cur-card-top">
         <span class="cur-cat">${esc(it.category||"기타")}</span>
         <span class="cur-date">${esc(it.date||"")}</span>
@@ -927,52 +917,6 @@ function renderCurated(){
     </article>`;
   }).join("");
 }
-function deleteCurated(id){
-  const items = curItems();
-  const idx = items.findIndex(x=>x.id===id);
-  if(idx===-1) return;
-  const it = items[idx];
-  if(!confirm(`이 카드를 삭제할까요?\n\n"${it.title||''}"\n\n삭제 확인 시:\n1) 업데이트된 curated.json이 클립보드에 복사됩니다.\n2) 삭제 알림 메일 작성 화면이 열립니다 (jhhur01@gsenc.com).`)) return;
-
-  items.splice(idx,1);
-  DATA.curated.updated_at = new Date().toISOString().slice(0,10) + " (수동 큐레이션)";
-
-  const jsonText = JSON.stringify(DATA.curated, null, 2);
-  const doCopy = ()=>{
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      return navigator.clipboard.writeText(jsonText);
-    }
-    return Promise.reject();
-  };
-
-  // 삭제 알림 메일 (누가 눌렀든 소유자에게 기록이 남도록)
-  const notifyEmail = "jhhur01@gsenc.com";
-  const subject = `[모듈러 대시보드] 큐레이션 카드 삭제 요청 - ${it.title||""}`;
-  const bodyLines = [
-    "전략 큐레이션 카드 삭제가 요청되었습니다.",
-    "",
-    "제목: " + (it.title||""),
-    "출처: " + (it.source||""),
-    "날짜: " + (it.date||""),
-    "URL: " + (it.url||""),
-    "요청 시각: " + new Date().toLocaleString("ko-KR"),
-    "",
-    "실제 반영하려면 curated.json에서 위 항목을 삭제(또는 클립보드에 복사된 최신 내용으로 교체) 후 커밋해주세요."
-  ];
-  const mailtoUrl = `mailto:${notifyEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
-
-  doCopy().then(()=>{
-    alert("삭제됐습니다. 업데이트된 curated.json 전체 내용이 클립보드에 복사됐어요.\n이어서 알림 메일 작성 화면이 열립니다 — '보내기'를 눌러야 실제로 전달됩니다.");
-  }).catch(()=>{
-    alert("삭제는 됐지만 클립보드 복사에 실패했어요. 이어서 열리는 메일에서 삭제 내용을 확인해주세요.");
-    console.log(jsonText);
-  }).finally(()=>{
-    window.open(mailtoUrl, "_blank");
-  });
-
-  closeModal();
-  renderCurated();
-}
 function openCurated(i){
   window.__lastCo=null;
   const it=curItems()[i]; if(!it)return;
@@ -981,7 +925,6 @@ function openCurated(i){
   const tags=(it.tags||[]).map(t=>`<span class="cur-tag">${esc(t)}</span>`).join("");
   const note=it.note?`<div class="cur-note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0012 2z"/></svg><span>${esc(it.note)}</span></div>`:"";
   const link=it.url?`<a class="cur-link" href="${esc(it.url)}" target="_blank" rel="noopener">원문 기사 보기 ↗</a>`:"";
-  const delBtn=`<button class="cur-del-lg" onclick="deleteCurated('${esc(it.id||'')}')">이 카드 삭제</button>`;
   openModal(`<button class="mclose" onclick="closeModal()" aria-label="닫기"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="mbody">
     <div class="m-cur">
@@ -991,7 +934,7 @@ function openCurated(i){
       ${sum?`<div class="m-cur-sec"><h4>핵심 요약</h4><ul class="cur-ul">${sum}</ul></div>`:""}
       ${rel?`<div class="m-cur-sec"><h4>우리 사업 연관성</h4><ul class="cur-ul rel">${rel}</ul></div>`:""}
       ${note}
-      <div class="m-cur-actions">${link}${delBtn}</div>
+      ${link}
     </div>
     </div>`);
 }
