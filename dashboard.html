@@ -244,7 +244,7 @@ svg.dim .link.hot{opacity:1;stroke-width:2.2}
 .cur-empty{text-align:center;padding:60px 20px;font-size:14px;line-height:1.8}
 .cur-empty span{font-size:12.5px}
 /* 큐레이션 상세 모달 */
-.m-cur{padding:2px}
+.m-cur{padding:0}
 .m-cur-meta{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .m-cur-title{font-size:22px;line-height:1.35;font-weight:700;color:var(--color-text-strong);margin:0 0 4px}
 .m-cur-sec{margin-top:20px}
@@ -926,6 +926,7 @@ function openCurated(i){
   const note=it.note?`<div class="cur-note"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.05V17h6v-.25c0-.85.4-1.55 1-2.05A7 7 0 0012 2z"/></svg><span>${esc(it.note)}</span></div>`:"";
   const link=it.url?`<a class="cur-link" href="${esc(it.url)}" target="_blank" rel="noopener">원문 기사 보기 ↗</a>`:"";
   openModal(`<button class="mclose" onclick="closeModal()" aria-label="닫기"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="mbody">
     <div class="m-cur">
       <div class="m-cur-meta"><span class="cur-cat">${esc(it.category||"기타")}</span><span class="cur-date">${esc(it.source||"")} · ${esc(it.date||"")}</span></div>
       <h2 class="m-cur-title">${esc(it.title||"")}</h2>
@@ -934,6 +935,7 @@ function openCurated(i){
       ${rel?`<div class="m-cur-sec"><h4>우리 사업 연관성</h4><ul class="cur-ul rel">${rel}</ul></div>`:""}
       ${note}
       ${link}
+    </div>
     </div>`);
 }
 function switchView(v){
