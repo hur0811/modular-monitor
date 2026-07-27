@@ -177,6 +177,9 @@ h1 small{display:block;font-family:var(--body);font-weight:400;font-size:12.5px;
 .cochip{font-size:11px;padding:2px 9px;border-radius:var(--radius-pill);border:1px solid var(--line);color:var(--txt)}
 .ev a.slink{font-size:11px;font-family:var(--mono);color:var(--muted-2);text-decoration:none;border-bottom:1px dotted var(--muted-2)}
 .ev a.slink:hover{color:var(--color-action-primary);border-color:var(--color-action-primary)}
+.likebtn{margin-left:8px;font-size:11px;padding:2px 9px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;}
+.likebtn:hover{border-color:var(--color-action-primary);color:var(--color-action-primary)}
+.likebtn:disabled{opacity:.7;cursor:default}
 
 /* ---------- diagram ---------- */
 .diagwrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-md);padding:6px;overflow-x:auto}
@@ -621,6 +624,41 @@ const EMBEDDED_DATA = {
   }
 };
 
+/* ============ Forms 연동 (전략 큐레이션 추천 버튼) ============ */
+const FORMS_BASE_URL = "https://forms.office.com/Pages/ResponsePage.aspx?id=N-ryuSozK0O3ROz8l2Or_cLvC1yTZkxAregm3vAZ8YZUMEdEUjJYS0o3VDU5WEJDTzZKSFlHWDAxQi4u";
+
+const FORMS_FIELDS = {
+  title: "rb66056e9efe34498a25fe71fed950a5c",
+  url: "r01532d820a7d41038a9f9e04765cc5d6",
+  date: "r4b619c47869c4101941a58267087c5b0",
+  type: "r425d6fde586f4f2d804abbba205961b0",
+  summary: "r792aa6810bef4e4cba3639c1f326c102",
+  companies: "rf276e56f64b0407e9c8a89094d6ad25e"
+};
+
+function recommendArticle(url, btn){
+  const e = DATA.events.find(x => x.url === url);
+  if(!e) return;
+
+  const companiesText = (e.companies || []).join(", ");
+
+  function encField(name, value){
+    return name + "=" + encodeURIComponent(value || "");
+  }
+
+  const finalUrl = FORMS_BASE_URL + "&" +
+    encField(FORMS_FIELDS.title, e.title) + "&" +
+    encField(FORMS_FIELDS.url, e.url) + "&" +
+    encField(FORMS_FIELDS.date, e.date) + "&" +
+    encField(FORMS_FIELDS.type, e.type) + "&" +
+    encField(FORMS_FIELDS.summary, e.summary) + "&" +
+    encField(FORMS_FIELDS.companies, companiesText);
+
+  window.open(finalUrl, "_blank");
+
+  if(btn){ btn.textContent = "✅ 양식 열림"; }
+}
+
 /* ============ 상태 ============ */
 let DATA = EMBEDDED_DATA;
 let activeCat = "전체";
@@ -764,9 +802,10 @@ function renderTimeline(){
       <span class="date">${esc(e.date)}</span><span class="etype">${esc(e.type)}</span>
       <div class="etitle">${esc(e.title)}</div>
       <div class="esum">${esc(e.summary)}</div>
-      <div class="ecos">${cos}${link}</div>
+      <div class="ecos">${cos}${link}<button class="likebtn" data-url="${esc(e.url||'')}" title="이 기사를 전략 큐레이션 후보로 추천">추천</button></div>
     </div>`;
   }).join("");
+  area.querySelectorAll('.likebtn').forEach(btn=>{btn.onclick=()=>recommendArticle(btn.dataset.url, btn);});
 }
 
 /* ============ 렌더: 관계도 ============ */
